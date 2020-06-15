@@ -21,14 +21,25 @@ enum ActionType {
     CreateTable,
 }
 
+impl ActionType {
+    pub fn to_string(&self) -> String {
+        match self {
+            ActionType::Filter => "filter",
+            ActionType::Insert => "insert",
+            ActionType::Order => "order",
+            ActionType::CreateTable => "create_table",
+        }.to_string()
+    }
+}
+
 #[derive(Debug, Clone)]
-enum ActionPayload<T> {
+enum ActionPayload<T: Transferable> {
     Condition(Condition),
     Object(T),
 }
 
 #[derive(Debug, Clone)]
-struct Action<T> {
+struct Action<T: Transferable> {
     action_type: ActionType,
     payload: ActionPayload<T>,
 }
@@ -52,7 +63,7 @@ impl<T: Blueprint + Transferable> Connect<T> {
 
     pub fn insert(&mut self, value: T) -> &Connect<T> {
         &self.actions.push(Action {
-            action_type: ActionType::Filter,
+            action_type: ActionType::Insert,
             payload: ActionPayload::Object(value)
         });
 
@@ -86,13 +97,17 @@ impl<T: Blueprint + Transferable> Connect<T> {
 
     fn serialize(&self) -> String {
         let mut result = String::new();
-        result.push_str(&self.table_name);
-        result.push_str("\n");
+        result.push_str(&format!(">{}\n", &self.table_name));
 
-        // for action in self.actions.to_vec() {
-        //     result.push_str(action.payload.ser().as_ref());
-        //     result.push_str("\n");
-        // }
+        for action in &self.actions {
+            let payload = match &action.payload {
+                ActionPayload::Condition(e) => e.serialize(),
+                ActionPayload::Object(e) => e.serialize(),
+            };
+
+            result.push_str(&format!("#{}\n", action.action_type.to_string()));
+            result.push_str(&format!("{}\n", payload));
+        }
 
         result
     }
@@ -106,6 +121,19 @@ pub enum Operator {
     Ge,
     Lt,
     Le,
+}
+
+impl Operator {
+    pub fn to_string(&self) -> String {
+        match self {
+            Operator::Eq => "eq",
+            Operator::Nq => "nq",
+            Operator::Gt => "gt",
+            Operator::Ge => "ge",
+            Operator::Lt => "lt",
+            Operator::Le => "le",
+        }.to_string()
+    }
 }
 
 #[derive(Debug, Clone, Transferable)]
