@@ -1,20 +1,14 @@
-use snowcat::{Blueprint, Transferable, Condition, Operator, Connect};
 use snowcat_derive::{Blueprint, Transferable};
+use snowcat::core::connect::Connect;
+use snowcat::core::conditions::{Condition, Operator};
+use snowcat::core::traits::{Blueprint, Transferable};
+
+mod utils;
 
 #[derive(Blueprint, Transferable)]
 struct Article {
     title: String,
     text: String,
-}
-
-macro_rules! c {
-    ($x:tt = $y:tt) => {
-        Condition {
-            field_name: stringify!($x).to_string(),
-            operator: Operator::Eq,
-            value: stringify!($y).to_string(),
-        };
-    }
 }
 
 fn main() {
